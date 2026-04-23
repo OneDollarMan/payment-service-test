@@ -1,0 +1,44 @@
+services:
+  payment-service-app:
+    build: ./app
+    command: uvicorn src.main:app --host 0.0.0.0 --reload --port 8000
+    container_name: payment-service-app
+    volumes:
+      - ./app:/app
+    env_file: ".env.dev"
+    ports:
+      - "8000:8000"
+    depends_on:
+      - payment-service-db
+      - payment-service-rabbitmq
+
+  payment-service-worker:
+    build: ./app
+    command: [ 'celery', '-A', 'src.tasks.celery_app', 'worker', '-l', 'info' ]
+    container_name: payment-service-worker
+    env_file: ".env.dev"
+    volumes:
+      - ./app:/app
+    depends_on:
+      - payment-service-db
+      - payment-service-rabbitmq
+
+  payment-service-db:
+    image: postgres:latest
+    container_name: payment-service-db
+    ports:
+      - "5432:5432"
+    env_file: ".env.dev"
+    volumes:
+      - db-volume:/var/lib/postgresql
+
+  payment-service-rabbitmq:
+    image: rabbitmq:latest
+    container_name: payment-service-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    env_file: ".env.dev"
+
+volumes:
+  db-volume:
