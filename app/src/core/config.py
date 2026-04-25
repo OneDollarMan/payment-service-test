@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     postgres_port: int = Field(default='5432', validation_alias="PGPORT")
     postgres_db: str = Field(default='payment-service', validation_alias="POSTGRES_DB")
     broker_url: str = Field(default='amqp://rabbit:rabbit@payment-service-rabbitmq:5672/', validation_alias="BROKER_URL")
+    auth_api_key: str = Field(default='key', validation_alias="AUTH_API_KEY")
 
     @property
     def database_url(self) -> str:
