@@ -12,16 +12,16 @@ services:
       - payment-service-db
       - payment-service-rabbitmq
 
-  payment-service-worker:
-    build: ./app
-    command: [ 'celery', '-A', 'src.tasks.celery_app', 'worker', '-l', 'info' ]
-    container_name: payment-service-worker
-    env_file: ".env.dev"
-    volumes:
-      - ./app:/app
-    depends_on:
-      - payment-service-db
-      - payment-service-rabbitmq
+  #payment-service-consumer:
+  #  build: ./app
+  #  command: [ 'celery', '-A', 'src.tasks.celery_app', 'worker', '-l', 'info' ]
+  # container_name: payment-service-consumer
+  #  env_file: ".env.dev"
+  #  volumes:
+  #    - ./app:/app
+  #  depends_on:
+  #    - payment-service-db
+  #    - payment-service-rabbitmq
 
   payment-service-db:
     image: postgres:latest

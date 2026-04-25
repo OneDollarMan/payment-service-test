@@ -7,10 +7,10 @@ class Settings(BaseSettings):
 
     postgres_user: str = Field(default='postgres', validation_alias="POSTGRES_USER")
     postgres_password: str = Field(default='postgres', validation_alias="POSTGRES_PASSWORD")
-    postgres_host: str = Field(default='logistic-model-db', validation_alias="POSTGRES_HOST")
+    postgres_host: str = Field(default='payment-service-db', validation_alias="POSTGRES_HOST")
     postgres_port: int = Field(default='5432', validation_alias="PGPORT")
-    postgres_db: str = Field(default='rossko_logistic', validation_alias="POSTGRES_DB")
-    celery_broker_url: str | None = Field(default=None, validation_alias="CELERY_BROKER_URL")
+    postgres_db: str = Field(default='payment-service', validation_alias="POSTGRES_DB")
+    broker_url: str = Field(default='amqp://rabbit:rabbit@payment-service-rabbitmq:5672/', validation_alias="BROKER_URL")
 
     @property
     def database_url(self) -> str:
