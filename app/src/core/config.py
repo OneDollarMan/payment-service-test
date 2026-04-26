@@ -1,5 +1,6 @@
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from sqlalchemy import Enum
 
 
 class Settings(BaseSettings):
@@ -21,3 +22,10 @@ class Settings(BaseSettings):
         )
 
 settings = Settings()
+
+
+class PaymentStatusEnum(str, Enum):
+    PENDING = "PENDING"
+    SUCCESS = "SUCCESS"
+    FAILED = "FAILED"
+

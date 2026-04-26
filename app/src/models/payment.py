@@ -4,6 +4,7 @@ from decimal import Decimal
 from sqlalchemy import UUID, Double, String, DateTime
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import mapped_column, Mapped
+from src.core.config import PaymentStatusEnum
 from src.core.db import Base
 
 
@@ -15,8 +16,8 @@ class Payment(Base):
     currency: Mapped[str] = mapped_column(String)
     description: Mapped[str] = mapped_column(String)
     meta: Mapped[dict] = mapped_column(JSONB)
-    status: Mapped[str] = mapped_column(String)
+    status: Mapped[str] = mapped_column(String, default=PaymentStatusEnum.PENDING)
     idempotency_key: Mapped[str] = mapped_column(String)
     webhook_url: Mapped[str] = mapped_column(String)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
-    processed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    processed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
