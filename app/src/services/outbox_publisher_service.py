@@ -1,5 +1,6 @@
+from src.core.config import settings
 from src.core.logger import build_logger
-from src.broker import PaymentEventProducer
+from src.broker import PaymentEventProducer, PaymentCreatedEvent
 from src.repositories.outbox_repository import OutboxMessageRepository
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -22,7 +23,7 @@ class OutboxPublisherService:
 
         for outbox_message in outbox_messages:
             try:
-                await self._payment_event_producer.publish(outbox_message.payload)
+                await self._payment_event_producer.publish(PaymentCreatedEvent.model_validate(outbox_message))
                 await self._outbox_repository.mark_as_published(self._session, outbox_message)
                 await self._session.commit()
                 self._logger.info(
@@ -33,8 +34,10 @@ class OutboxPublisherService:
                 )
                 published_count += 1
             except Exception as exc:
+                self._logger.error(f'Error publishing {outbox_message.id=}: {repr(exc)}')
                 await self._session.rollback()
-                await self._outbox_repository.mark_as_failed(self._session, outbox_message, str(exc))
+                await self._session.refresh(outbox_message)
+                await self._outbox_repository.mark_as_failed(self._session, outbox_message, str(exc), settings.outbox_publish_max_attempts)
                 await self._session.commit()
 
         return published_count

@@ -14,6 +14,8 @@ class Settings(BaseSettings):
     broker_url: str = Field(default='amqp://rabbit:rabbit@payment-service-rabbitmq:5672/', validation_alias="BROKER_URL")
     auth_api_key: str = Field(default='key', validation_alias="AUTH_API_KEY")
 
+    outbox_publish_max_attempts: int = Field(default=5, validation_alias="OUTBOX_PUBLISH_MAX_ATTEMPTS")
+
     @property
     def database_url(self) -> str:
         return (
@@ -28,3 +30,9 @@ class PaymentStatusEnum(str, Enum):
     PENDING = "pending"
     SUCCEEDED = "succeeded"
     FAILED = "failed"
+
+
+class OutboxMessageStatusEnum(str, Enum):
+    PENDING = "PENDING"
+    PUBLISHED = "PUBLISHED"
+    FAILED = "FAILED"

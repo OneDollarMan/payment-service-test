@@ -1,4 +1,5 @@
 from faststream.rabbit import RabbitBroker, RabbitQueue
+from src.broker.contracts.payment_event import PaymentCreatedEvent
 from src.core.config import settings
 
 
@@ -15,5 +16,5 @@ payments_new_queue = RabbitQueue(
 class PaymentEventProducer:
     queue = payments_new_queue
 
-    async def publish(self, payload: dict) -> None:
-        await broker.publish(payload, queue=self.queue, persist=True)
+    async def publish(self, payload: PaymentCreatedEvent) -> None:
+        await broker.publish(payload.model_dump(), queue=self.queue, persist=True)
