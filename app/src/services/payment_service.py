@@ -45,7 +45,7 @@ class PaymentService:
                 aggregate_type=self.outbox_aggregate_type,
                 aggregate_id=payment.id,
                 event_name=self.outbox_event_payment_created,
-                payload={},
+                payload=self._build_payment_created_payload(payment),
             )
             await self._session.commit()
             return payment
@@ -100,3 +100,18 @@ class PaymentService:
             and payment.meta == schema.meta
             and payment.webhook_url == str(schema.webhook_url)
         )
+
+    @staticmethod
+    def _build_payment_created_payload(payment: Payment) -> dict:
+        return {
+            "event_name": "payment.created",
+            "payment_id": str(payment.id),
+            "amount": str(payment.amount),
+            "currency": payment.currency,
+            "description": payment.description,
+            "meta": payment.meta,
+            "status": payment.status,
+            "idempotency_key": payment.idempotency_key,
+            "webhook_url": payment.webhook_url,
+            "created_at": payment.created_at.isoformat() if payment.created_at else None,
+        }
