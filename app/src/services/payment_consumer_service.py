@@ -1,27 +1,33 @@
 import uuid
-from src.core.db import async_session_maker
 from src.core.logger import build_logger
 from src.repositories.outbox_repository import OutboxMessageRepository
 from src.repositories.payment_repository import PaymentRepository
 from src.services.payment_service import PaymentService
 from src.clients.webhook_client import WebhookClient
+from sqlalchemy.ext.asyncio import AsyncSession
 
 
 class PaymentConsumerService:
-    def __init__(self, webhook_client: WebhookClient):
+    def __init__(
+            self,
+            payment_repository: PaymentRepository,
+            outbox_message_repository: OutboxMessageRepository,
+            webhook_client: WebhookClient
+    ):
+        self.payment_repository = payment_repository
+        self.outbox_message_repository = outbox_message_repository
         self._webhook_client = webhook_client
         self._logger = build_logger(self.__class__.__name__)
 
-    async def handle_payment_created(self, payload: dict) -> None:
+    async def handle_payment_created(self, session: AsyncSession, payload: dict) -> None:
         payment_id = uuid.UUID(payload["payment_id"])
 
-        async with async_session_maker() as session:
-            payment_service = PaymentService(
-                session=session,
-                payment_repository=PaymentRepository(),
-                outbox_repository=OutboxMessageRepository(),
-            )
-            payment = await payment_service.process_payment(payment_id)
+        payment_service = PaymentService(
+            session=session,
+            payment_repository=self.payment_repository,
+            outbox_repository=self.outbox_message_repository,
+        )
+        payment = await payment_service.process_payment(payment_id)
 
         await self._webhook_client.notify_payment_processed(payment)
         self._logger.info(

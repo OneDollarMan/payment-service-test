@@ -1,6 +1,6 @@
 import asyncio
 from abc import ABC, abstractmethod
-from src.brokers.faststream_broker import broker
+from src.broker import broker
 from src.core.logger import build_logger
 
 

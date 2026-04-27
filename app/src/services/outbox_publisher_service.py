@@ -1,5 +1,5 @@
 from src.core.logger import build_logger
-from src.brokers.payment_producer import PaymentEventProducer
+from src.broker import PaymentEventProducer
 from src.repositories.outbox_repository import OutboxMessageRepository
 from sqlalchemy.ext.asyncio import AsyncSession
 

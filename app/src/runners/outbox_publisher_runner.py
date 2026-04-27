@@ -1,5 +1,5 @@
 import asyncio
-from src.brokers.payment_producer import PaymentEventProducer
+from src.broker import PaymentEventProducer
 from src.core.db import async_session_maker
 from src.repositories.outbox_repository import OutboxMessageRepository
 from src.runners.base_broker_runner import BaseBrokerRunner
