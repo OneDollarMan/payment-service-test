@@ -17,7 +17,7 @@ class Payment(Base):
     description: Mapped[str] = mapped_column(String)
     meta: Mapped[dict] = mapped_column(JSONB)
     status: Mapped[str] = mapped_column(String, default=PaymentStatusEnum.PENDING)
-    idempotency_key: Mapped[str] = mapped_column(String)
+    idempotency_key: Mapped[str] = mapped_column(String, unique=True)
     webhook_url: Mapped[str] = mapped_column(String)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     processed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

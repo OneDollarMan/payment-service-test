@@ -1,6 +1,7 @@
 import asyncio
 import random
 import uuid
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.repositories.outbox_repository import OutboxMessageRepository
 from src.core.config import PaymentStatusEnum
@@ -24,16 +25,35 @@ class PaymentService:
         self.outbox_event_payment_created = 'payment.created'
 
     async def create_payment(self, idempotency_key: str, schema: PaymentCreateRequest) -> Payment:
+        existing_payment = await self._payment_repository.get_by_idempotency_key(self._session, idempotency_key)
+        if existing_payment:
+            return existing_payment
+
         payment = await self._payment_repository.create(
-            session=self._session, idempotency_key=idempotency_key, amount=schema.amount, currency=schema.currency,
-            description=schema.description, meta=schema.meta, webhook_url=str(schema.webhook_url)
+            session=self._session,
+            idempotency_key=idempotency_key,
+            amount=schema.amount,
+            currency=schema.currency,
+            description=schema.description,
+            meta=schema.meta,
+            webhook_url=str(schema.webhook_url),
         )
-        await self._outbox_repository.create(
-            session=self._session, aggregate_type=self.outbox_aggregate_type,
-            aggregate_id=payment.id, event_name=self.outbox_event_payment_created, payload={}
-        )
-        await self._session.commit()
-        return payment
+        try:
+            await self._outbox_repository.create(
+                session=self._session,
+                aggregate_type=self.outbox_aggregate_type,
+                aggregate_id=payment.id,
+                event_name=self.outbox_event_payment_created,
+                payload={},
+            )
+            await self._session.commit()
+            return payment
+        except IntegrityError:
+            await self._session.rollback()
+            existing_payment = await self._payment_repository.get_by_idempotency_key(self._session, idempotency_key)
+            if existing_payment:
+                return existing_payment
+            raise
 
     async def get_payment(self, payment_id: uuid.UUID) -> Payment:
         payment = await self._payment_repository.get_by_id(self._session, payment_id)

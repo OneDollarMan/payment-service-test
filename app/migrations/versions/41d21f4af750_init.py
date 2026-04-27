@@ -1,8 +1,8 @@
 """init
 
-Revision ID: 3899df77d9d0
+Revision ID: 41d21f4af750
 Revises: 
-Create Date: 2026-04-27 06:14:59.327378
+Create Date: 2026-04-27 09:09:53.081348
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision: str = '3899df77d9d0'
+revision: str = '41d21f4af750'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -45,7 +45,8 @@ def upgrade() -> None:
     sa.Column('webhook_url', sa.String(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.Column('processed_at', sa.DateTime(timezone=True), nullable=True),
-    sa.PrimaryKeyConstraint('id')
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('idempotency_key')
     )
     # ### end Alembic commands ###
 

@@ -1,5 +1,6 @@
 import uuid
 from decimal import Decimal
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.models.payment import Payment
 
@@ -31,6 +32,10 @@ class PaymentRepository:
 
     async def get_by_id(self, session: AsyncSession, payment_id: uuid.UUID) -> Payment | None:
         return await session.get(Payment, payment_id)
+
+    async def get_by_idempotency_key(self, session: AsyncSession, idempotency_key: str) -> Payment | None:
+        stmt = select(Payment).where(Payment.idempotency_key == idempotency_key)
+        return await session.scalar(stmt)
 
     async def update_status(self, session: AsyncSession, payment_id: uuid.UUID, status: str) -> Payment | None:
         payment = await self.get_by_id(session, payment_id)
