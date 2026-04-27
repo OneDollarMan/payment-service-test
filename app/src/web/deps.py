@@ -3,6 +3,7 @@ from fastapi import Header, Depends, Security, HTTPException
 from fastapi.security import APIKeyHeader
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
+from src.repositories.outbox_repository import OutboxMessageRepository
 from src.repositories.payment_repository import PaymentRepository
 from src.services.payment_service import PaymentService
 from src.core.config import Settings
@@ -39,9 +40,14 @@ def get_payment_repository():
     return PaymentRepository()
 
 
+def get_outbox_repository():
+    return OutboxMessageRepository()
+
+
 def get_payment_service(
         session: AsyncSession = Depends(get_async_session),
         payment_repository: PaymentRepository = Depends(get_payment_repository),
+        outbox_repository: OutboxMessageRepository = Depends(get_outbox_repository),
         api_key: str = Security(get_auth)
 ) -> PaymentService:
-    return PaymentService(session, payment_repository)
+    return PaymentService(session, payment_repository, outbox_repository)

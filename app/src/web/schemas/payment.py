@@ -2,11 +2,11 @@ import uuid
 from datetime import datetime
 from decimal import Decimal
 from typing import Literal, Annotated
-from pydantic import BaseModel, StringConstraints, HttpUrl
+from pydantic import BaseModel, StringConstraints, HttpUrl, Field
 
 
 class PaymentCreateRequest(BaseModel):
-    amount: Decimal
+    amount: Decimal = Field(gt=0)
     currency: Literal["RUB", "EUR", "USD"]
     description: Annotated[str, StringConstraints(max_length=255)]
     meta: dict
