@@ -1,7 +1,10 @@
+from __future__ import annotations
+
 import asyncio
 import random
 import uuid
 from decimal import Decimal
+from typing import TYPE_CHECKING
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.repositories.outbox_repository import OutboxMessageRepository
@@ -9,7 +12,9 @@ from src.core.config import PaymentStatusEnum
 from src.core.exceptions import IdempotencyConflictError, PaymentNotFoundError
 from src.models.payment import Payment
 from src.repositories.payment_repository import PaymentRepository
-from src.web.schemas.payment import PaymentCreateRequest
+
+if TYPE_CHECKING:
+    from src.web.schemas.payment import PaymentCreateRequest
 
 
 class PaymentService:
@@ -69,15 +74,21 @@ class PaymentService:
         await self._session.commit()
         return payment
 
-    async def process_payment(self, payment_id: uuid.UUID) -> int:
+    async def process_payment(self, payment_id: uuid.UUID) -> Payment:
         await self.get_payment(payment_id)
         await asyncio.sleep(random.randint(2, 5))
         if random.randint(0, 9) == 0:
-            raise Exception(f'Payment {payment_id} failed')
+            payment = await self._payment_repository.update_status(self._session, payment_id, PaymentStatusEnum.FAILED)
+            await self._session.commit()
+            if not payment:
+                raise PaymentNotFoundError(f'Payment {payment_id} not found')
+            return payment
 
-        await self._payment_repository.update_status(self._session, payment_id, PaymentStatusEnum.SUCCEEDED)
+        payment = await self._payment_repository.update_status(self._session, payment_id, PaymentStatusEnum.SUCCEEDED)
         await self._session.commit()
-        return 0
+        if not payment:
+            raise PaymentNotFoundError(f'Payment {payment_id} not found')
+        return payment
 
     async def _ensure_idempotent_request(
             self,

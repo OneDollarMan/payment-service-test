@@ -1,29 +1,17 @@
 import asyncio
+from abc import ABC, abstractmethod
 from src.brokers.faststream_broker import broker
-from src.brokers.payment_producer import PaymentEventProducer
-from src.core.db import async_session_maker
 from src.core.logger import build_logger
-from src.repositories.outbox_repository import OutboxMessageRepository
-from src.services.outbox_publisher_service import OutboxPublisherService
 
 
-class OutboxPublisherRunner:
+class BaseBrokerRunner(ABC):
     def __init__(self):
         self._logger = build_logger(self.__class__.__name__)
 
-    async def run(self, poll_interval_seconds: int = 1) -> None:
+    async def run(self, *args, **kwargs) -> None:
         await self._connect_broker_with_retry()
         try:
-            while True:
-                async with async_session_maker() as session:
-                    service = OutboxPublisherService(
-                        session=session,
-                        outbox_repository=OutboxMessageRepository(),
-                        payment_event_producer=PaymentEventProducer(),
-                    )
-                    await service.publish_pending_messages()
-
-                await asyncio.sleep(poll_interval_seconds)
+            await self._run(*args, **kwargs)
         finally:
             await broker.close()
 
@@ -46,3 +34,7 @@ class OutboxPublisherRunner:
                 )
                 await asyncio.sleep(retry_delay)
                 retry_delay = min(retry_delay * 2, max_delay_seconds)
+
+    @abstractmethod
+    async def _run(self, *args, **kwargs) -> None:
+        raise NotImplementedError

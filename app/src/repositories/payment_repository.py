@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime, timezone
 from decimal import Decimal
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -43,6 +44,7 @@ class PaymentRepository:
             return None
 
         payment.status = status
+        payment.processed_at = datetime.now(timezone.utc)
         await session.flush()
         await session.refresh(payment)
         return payment

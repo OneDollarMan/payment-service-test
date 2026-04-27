@@ -14,8 +14,19 @@ services:
 
   payment-service-producer:
     build: ./app
-    command: python -m src.tasks
+    command: python -m src.tasks producer
     container_name: payment-service-producer
+    volumes:
+      - ./app:/app
+    env_file: ".env.dev"
+    depends_on:
+      - payment-service-db
+      - payment-service-rabbitmq
+
+  payment-service-consumer:
+    build: ./app
+    command: python -m src.tasks consumer
+    container_name: payment-service-consumer
     volumes:
       - ./app:/app
     env_file: ".env.dev"
