@@ -1,11 +1,12 @@
 import asyncio
 import random
 import uuid
+from decimal import Decimal
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.repositories.outbox_repository import OutboxMessageRepository
 from src.core.config import PaymentStatusEnum
-from src.core.exceptions import PaymentNotFoundError
+from src.core.exceptions import IdempotencyConflictError, PaymentNotFoundError
 from src.models.payment import Payment
 from src.repositories.payment_repository import PaymentRepository
 from src.web.schemas.payment import PaymentCreateRequest
@@ -25,7 +26,7 @@ class PaymentService:
         self.outbox_event_payment_created = 'payment.created'
 
     async def create_payment(self, idempotency_key: str, schema: PaymentCreateRequest) -> Payment:
-        existing_payment = await self._payment_repository.get_by_idempotency_key(self._session, idempotency_key)
+        existing_payment = await self._ensure_idempotent_request(idempotency_key, schema)
         if existing_payment:
             return existing_payment
 
@@ -50,7 +51,7 @@ class PaymentService:
             return payment
         except IntegrityError:
             await self._session.rollback()
-            existing_payment = await self._payment_repository.get_by_idempotency_key(self._session, idempotency_key)
+            existing_payment = await self._ensure_idempotent_request(idempotency_key, schema)
             if existing_payment:
                 return existing_payment
             raise
@@ -77,3 +78,25 @@ class PaymentService:
         await self._payment_repository.update_status(self._session, payment_id, PaymentStatusEnum.SUCCEEDED)
         await self._session.commit()
         return 0
+
+    async def _ensure_idempotent_request(
+            self,
+            idempotency_key: str,
+            schema: PaymentCreateRequest,
+    ) -> Payment | None:
+        payment = await self._payment_repository.get_by_idempotency_key(self._session, idempotency_key)
+        if payment and not self._payment_matches_request(payment, schema):
+            raise IdempotencyConflictError(
+                "Idempotency-Key is already used for another payment payload"
+            )
+        return payment
+
+    @staticmethod
+    def _payment_matches_request(payment: Payment, schema: PaymentCreateRequest) -> bool:
+        return (
+            Decimal(payment.amount) == schema.amount
+            and payment.currency == schema.currency
+            and payment.description == schema.description
+            and payment.meta == schema.meta
+            and payment.webhook_url == str(schema.webhook_url)
+        )

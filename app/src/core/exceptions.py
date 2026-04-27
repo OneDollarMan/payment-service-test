@@ -1,2 +1,6 @@
 class PaymentNotFoundError(Exception):
     ...
+
+
+class IdempotencyConflictError(Exception):
+    ...
