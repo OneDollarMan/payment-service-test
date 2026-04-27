@@ -1,7 +1,7 @@
 from datetime import datetime
 import uuid
 from decimal import Decimal
-from sqlalchemy import UUID, Double, String, DateTime, func
+from sqlalchemy import UUID, DECIMAL, String, DateTime, func
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import mapped_column, Mapped
 from src.core.config import PaymentStatusEnum
@@ -12,7 +12,7 @@ class Payment(Base):
     __tablename__ = "payments"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    amount: Mapped[Decimal] = mapped_column(Double)
+    amount: Mapped[Decimal] = mapped_column(DECIMAL(12, 2))
     currency: Mapped[str] = mapped_column(String)
     description: Mapped[str] = mapped_column(String)
     meta: Mapped[dict] = mapped_column(JSONB)

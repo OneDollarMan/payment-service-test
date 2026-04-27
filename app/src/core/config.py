@@ -25,7 +25,6 @@ settings = Settings()
 
 
 class PaymentStatusEnum(str, Enum):
-    PENDING = "PENDING"
-    SUCCESS = "SUCCESS"
-    FAILED = "FAILED"
-
+    PENDING = "pending"
+    SUCCEEDED = "succeeded"
+    FAILED = "failed"

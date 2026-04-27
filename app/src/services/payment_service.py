@@ -74,6 +74,6 @@ class PaymentService:
         if random.randint(0, 9) == 0:
             raise Exception(f'Payment {payment_id} failed')
 
-        await self._payment_repository.update_status(self._session, payment_id, PaymentStatusEnum.SUCCESS)
+        await self._payment_repository.update_status(self._session, payment_id, PaymentStatusEnum.SUCCEEDED)
         await self._session.commit()
         return 0

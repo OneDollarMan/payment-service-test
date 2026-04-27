@@ -36,7 +36,7 @@ def upgrade() -> None:
     )
     op.create_table('payments',
     sa.Column('id', sa.UUID(), nullable=False),
-    sa.Column('amount', sa.Double(), nullable=False),
+    sa.Column('amount', sa.DECIMAL(precision=12, scale=2), nullable=False),
     sa.Column('currency', sa.String(), nullable=False),
     sa.Column('description', sa.String(), nullable=False),
     sa.Column('meta', postgresql.JSONB(astext_type=sa.Text()), nullable=False),
