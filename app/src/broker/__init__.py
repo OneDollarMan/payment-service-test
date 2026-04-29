@@ -1,17 +1,9 @@
 from faststream import FastStream
-from faststream._internal.broker import BrokerUsecase
 from faststream.rabbit import RabbitBroker, RabbitQueue
 from src.broker.contracts.payment_event import PaymentCreatedEvent
 from src.core.config import settings
 
-
-class PaymentRabbitBroker(RabbitBroker):
-    async def start(self) -> None:
-        await self.connect()
-        await BrokerUsecase.start(self)
-
-
-broker = PaymentRabbitBroker(settings.broker_url)
+broker = RabbitBroker(settings.broker_url)
 
 payments_new_queue = RabbitQueue(
     name="payments.new",
