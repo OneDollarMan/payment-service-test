@@ -10,4 +10,3 @@ class PaymentCreatedEvent(BaseModel):
     aggregate_type: Literal["payment"]
     aggregate_id: uuid.UUID
     event_name: Literal["payment.created"]
-    payload: dict
