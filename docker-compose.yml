@@ -9,8 +9,10 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      - payment-service-db
-      - payment-service-rabbitmq
+      payment-service-db:
+        condition: service_started
+      payment-service-rabbitmq:
+        condition: service_healthy
 
   payment-service-producer:
     build: ./app
@@ -20,8 +22,10 @@ services:
       - ./app:/app
     env_file: ".env.dev"
     depends_on:
-      - payment-service-db
-      - payment-service-rabbitmq
+      payment-service-db:
+        condition: service_started
+      payment-service-rabbitmq:
+        condition: service_healthy
 
   payment-service-consumer:
     build: ./app
@@ -31,8 +35,10 @@ services:
       - ./app:/app
     env_file: ".env.dev"
     depends_on:
-      - payment-service-db
-      - payment-service-rabbitmq
+      payment-service-db:
+        condition: service_started
+      payment-service-rabbitmq:
+        condition: service_healthy
 
   payment-service-db:
     image: postgres:latest
@@ -50,6 +56,12 @@ services:
       - "5672:5672"
       - "15672:15672"
     env_file: ".env.dev"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 5s
 
 volumes:
   db-volume:
