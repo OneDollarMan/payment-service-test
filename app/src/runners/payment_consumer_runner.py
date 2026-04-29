@@ -34,6 +34,3 @@ async def consume_payment_created(event: PaymentCreatedEvent) -> None:
 class PaymentConsumerRunner(BaseBrokerRunner):
     async def _run(self) -> None:
         self._logger.info("Starting payment consumer")
-        await broker.start()
-        while True:
-            await asyncio.sleep(1)
