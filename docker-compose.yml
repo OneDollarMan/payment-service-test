@@ -11,8 +11,6 @@ services:
     depends_on:
       payment-service-db:
         condition: service_started
-      payment-service-rabbitmq:
-        condition: service_healthy
 
   payment-service-producer:
     build: ./app
