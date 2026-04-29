@@ -1,7 +1,4 @@
 from __future__ import annotations
-
-import asyncio
-import random
 import uuid
 from decimal import Decimal
 from typing import TYPE_CHECKING
@@ -72,22 +69,6 @@ class PaymentService:
         if not payment:
             raise PaymentNotFoundError(f'Payment {payment_id} not found')
         await self._session.commit()
-        return payment
-
-    async def process_payment(self, payment_id: uuid.UUID) -> Payment:
-        await self.get_payment(payment_id)
-        await asyncio.sleep(random.randint(2, 5))
-        if random.randint(0, 9) == 0:
-            payment = await self._payment_repository.update_status(self._session, payment_id, PaymentStatusEnum.FAILED)
-            await self._session.commit()
-            if not payment:
-                raise PaymentNotFoundError(f'Payment {payment_id} not found')
-            return payment
-
-        payment = await self._payment_repository.update_status(self._session, payment_id, PaymentStatusEnum.SUCCEEDED)
-        await self._session.commit()
-        if not payment:
-            raise PaymentNotFoundError(f'Payment {payment_id} not found')
         return payment
 
     async def _ensure_idempotent_request(
