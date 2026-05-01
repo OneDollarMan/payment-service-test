@@ -22,8 +22,18 @@ class PaymentConsumerService(PaymentStatusService):
 
     async def handle_payment_created(self, event: PaymentCreatedEvent) -> None:
         payment_id = event.aggregate_id
-        payment = await self.process_payment(payment_id)
-        await self._notify_payment_processed(payment)
+        payment = await self.get_payment(payment_id)
+        try:
+            await self.process_payment()
+            await self._notify_payment_processed(payment)
+        except Exception as e:
+            self._logger.error(str(e))
+            payment.status = PaymentStatusEnum.FAILED
+            await self._session.commit()
+            return
+
+        payment.status = PaymentStatusEnum.SUCCEEDED
+        await self._session.commit()
         self._logger.info(
             "Processed payment id=%s status=%s webhook_url=%s",
             payment.id,
@@ -45,16 +55,7 @@ class PaymentConsumerService(PaymentStatusService):
             response = await client.post(payment.webhook_url, json=payload)
             response.raise_for_status()
 
-    async def process_payment(self, payment_id: uuid.UUID) -> Payment:
-        await self.get_payment(payment_id)
+    async def process_payment(self) -> None:
         await asyncio.sleep(random.randint(2, 5))
         if random.randint(0, 9) == 0:
-            payment = await self.update_payment_status(payment_id, PaymentStatusEnum.FAILED)
-            if not payment:
-                raise PaymentNotFoundError(f'Payment {payment_id} not found')
-            return payment
-
-        payment = await self.update_payment_status(payment_id, PaymentStatusEnum.SUCCEEDED)
-        if not payment:
-            raise PaymentNotFoundError(f'Payment {payment_id} not found')
-        return payment
+            raise Exception("Payment failed")
