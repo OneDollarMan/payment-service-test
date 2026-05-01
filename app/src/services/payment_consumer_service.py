@@ -1,12 +1,12 @@
 import asyncio
 import random
-import uuid
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from core.exceptions import PaymentNotFoundError
 from src.repositories.payment_repository import PaymentRepository
 from src.services.payment_status_service import PaymentStatusService
 from src.core.config import PaymentStatusEnum
-from src.core.exceptions import PaymentNotFoundError
 from src.models import Payment
 from src.broker.contracts.payment_event import PaymentCreatedEvent
 from src.core.logger import build_logger
@@ -22,7 +22,12 @@ class PaymentConsumerService(PaymentStatusService):
 
     async def handle_payment_created(self, event: PaymentCreatedEvent) -> None:
         payment_id = event.aggregate_id
-        payment = await self.get_payment(payment_id)
+        try:
+            payment = await self.get_payment(payment_id)
+        except PaymentNotFoundError as e:
+            self._logger.warning(str(e))
+            return
+
         try:
             await self.process_payment()
             await self._notify_payment_processed(payment)
