@@ -1,28 +1,23 @@
 from __future__ import annotations
-import uuid
 from decimal import Decimal
-from typing import TYPE_CHECKING
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
+from src.services.payment_status_service import PaymentStatusService
 from src.repositories.outbox_repository import OutboxMessageRepository
-from src.core.config import PaymentStatusEnum
-from src.core.exceptions import IdempotencyConflictError, PaymentNotFoundError
+from src.core.exceptions import IdempotencyConflictError
 from src.models.payment import Payment
 from src.repositories.payment_repository import PaymentRepository
-
-if TYPE_CHECKING:
-    from src.web.schemas.payment import PaymentCreateRequest
+from src.web.schemas.payment import PaymentCreateRequest
 
 
-class PaymentService:
+class PaymentService(PaymentStatusService):
     def __init__(
             self,
             session: AsyncSession,
             payment_repository: PaymentRepository,
             outbox_repository: OutboxMessageRepository
     ):
-        self._session = session
-        self._payment_repository = payment_repository
+        super().__init__(session, payment_repository)
         self._outbox_repository = outbox_repository
         self.outbox_aggregate_type = 'payment'
         self.outbox_event_payment_created = 'payment.created'
@@ -56,19 +51,6 @@ class PaymentService:
             if existing_payment:
                 return existing_payment
             raise
-
-    async def get_payment(self, payment_id: uuid.UUID) -> Payment:
-        payment = await self._payment_repository.get_by_id(self._session, payment_id)
-        if not payment:
-            raise PaymentNotFoundError(f'Payment {payment_id} not found')
-        return payment
-
-    async def update_payment_status(self, payment_id: uuid.UUID, status: PaymentStatusEnum) -> Payment:
-        payment = await self._payment_repository.update_status(self._session, payment_id, status)
-        if not payment:
-            raise PaymentNotFoundError(f'Payment {payment_id} not found')
-        await self._session.commit()
-        return payment
 
     async def _ensure_idempotent_request(
             self,
