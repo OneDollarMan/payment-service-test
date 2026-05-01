@@ -1,9 +1,15 @@
 from src.broker.contracts import PaymentCreatedEvent
-from src.broker.rabbit_broker import broker, payments_new_queue
+from src.broker.rabbit_broker import broker, payments_exchange
 
 
 class PaymentEventProducer:
-    queue = payments_new_queue
+    exchange = payments_exchange
+    routing_key = "payment.created"
 
     async def publish(self, payload: PaymentCreatedEvent) -> None:
-        await broker.publish(payload.model_dump(), queue=self.queue, persist=True)
+        await broker.publish(
+            payload.model_dump(),
+            exchange=self.exchange,
+            routing_key=self.routing_key,
+            persist=True,
+        )
