@@ -2,19 +2,24 @@ from faststream.rabbit import ExchangeType, RabbitBroker, RabbitExchange, Rabbit
 from src.core.config import settings
 
 
-broker = RabbitBroker(settings.broker_url)
+def build_broker():
+    return RabbitBroker(settings.broker_url)
 
-payments_exchange = RabbitExchange(
+
+def build_exchange():
+    return RabbitExchange(
     name="payments",
     type=ExchangeType.DIRECT,
     durable=True,
     auto_delete=False,
 )
 
-payments_new_queue = RabbitQueue(
-    name="payments.new",
-    durable=True,
-    auto_delete=False,
-    exclusive=False,
-    routing_key="payment.created",
-)
+
+def build_queue():
+    return RabbitQueue(
+        name="payments.new",
+        durable=True,
+        auto_delete=False,
+        exclusive=False,
+        routing_key="payment.created",
+    )

@@ -26,7 +26,6 @@ def upgrade() -> None:
     sa.Column('aggregate_type', sa.String(), nullable=False),
     sa.Column('aggregate_id', sa.UUID(), nullable=False),
     sa.Column('event_name', sa.String(), nullable=False),
-    sa.Column('payload', postgresql.JSONB(astext_type=sa.Text()), nullable=False),
     sa.Column('status', sa.String(), nullable=False),
     sa.Column('attempts', sa.Integer(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),

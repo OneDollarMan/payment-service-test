@@ -9,13 +9,12 @@ from src.models import OutboxMessage
 class OutboxMessageRepository:
 
     async def create(
-            self, session: AsyncSession, aggregate_type: str, aggregate_id: uuid.UUID, event_name: str, payload: dict
+            self, session: AsyncSession, aggregate_type: str, aggregate_id: uuid.UUID, event_name: str
     ) -> OutboxMessage:
         outbox_message = OutboxMessage(
             aggregate_type=aggregate_type,
             aggregate_id=aggregate_id,
             event_name=event_name,
-            payload=payload
         )
         session.add(outbox_message)
         await session.flush()

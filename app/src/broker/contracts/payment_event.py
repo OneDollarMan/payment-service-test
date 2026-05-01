@@ -1,12 +1,10 @@
 import uuid
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 from src.core.types import AggType, EventNameType
 
 
 class PaymentCreatedEvent(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: uuid.UUID
+    message_id: uuid.UUID
     aggregate_type: AggType
     aggregate_id: uuid.UUID
     event_name: EventNameType

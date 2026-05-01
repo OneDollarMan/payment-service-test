@@ -3,11 +3,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.services.payment_service import PaymentService
 from src.repositories.outbox_repository import OutboxMessageRepository
 from src.repositories.payment_repository import PaymentRepository
-from src.broker import broker, payments_exchange, payments_new_queue, PaymentCreatedEvent
+from src.broker import build_broker, build_exchange, build_queue, PaymentCreatedEvent
 from src.core.db import async_session_maker
 from src.services.payment_consumer_service import PaymentConsumerService
-
-app = FastStream(broker)
 
 
 def build_payment_consumer_service(session: AsyncSession) -> PaymentConsumerService:
@@ -22,8 +20,18 @@ def build_payment_consumer_service(session: AsyncSession) -> PaymentConsumerServ
     return PaymentConsumerService(payment_service=payment_service)
 
 
-@broker.subscriber(payments_new_queue, payments_exchange, no_reply=True)
-async def consume_payment_created(event: PaymentCreatedEvent) -> None:
-    async with async_session_maker() as session:
-        payment_consumer_service = build_payment_consumer_service(session)
-        await payment_consumer_service.handle_payment_created(event)
+def build_runner():
+    broker = build_broker()
+    exchange = build_exchange()
+    queue = build_queue()
+    app = FastStream(broker)
+
+    @broker.subscriber(queue, exchange, no_reply=True)
+    async def consume_payment_created(event: PaymentCreatedEvent) -> None:
+        async with async_session_maker() as session:
+            payment_consumer_service = build_payment_consumer_service(session)
+            await payment_consumer_service.handle_payment_created(event)
+    return app
+
+
+runner = build_runner()

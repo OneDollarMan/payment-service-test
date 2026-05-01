@@ -25,7 +25,7 @@ class OutboxPublisherService:
             try:
                 await self._payment_event_producer.publish(
                     payload=PaymentCreatedEvent(
-                        id=outbox_message.id,
+                        message_id=outbox_message.id,
                         aggregate_type=outbox_message.aggregate_type,
                         aggregate_id=outbox_message.aggregate_id,
                         event_name=outbox_message.event_name,

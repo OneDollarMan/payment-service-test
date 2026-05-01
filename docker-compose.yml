@@ -14,7 +14,7 @@ services:
 
   payment-service-producer:
     build: ./app
-    command: faststream run src.runners.outbox_publisher_runner:app
+    command: faststream run src.runners.outbox_publisher_runner:runner
     container_name: payment-service-producer
     volumes:
       - ./app:/app
@@ -27,7 +27,7 @@ services:
 
   payment-service-consumer:
     build: ./app
-    command: faststream run src.runners.payment_consumer_runner:app
+    command: faststream run src.runners.payment_consumer_runner:runner
     container_name: payment-service-consumer
     volumes:
       - ./app:/app

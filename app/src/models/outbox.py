@@ -14,7 +14,6 @@ class OutboxMessage(Base):
     aggregate_type: Mapped[AggType] = mapped_column(String)
     aggregate_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True))
     event_name: Mapped[EventNameType] = mapped_column(String)
-    payload: Mapped[dict] = mapped_column(JSONB)
     status: Mapped[str] = mapped_column(String, default="PENDING")
     attempts: Mapped[int] = mapped_column(Integer, default=0)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
