@@ -26,7 +26,7 @@ class OutboxMessageRepository:
             select(OutboxMessage)
             .where(OutboxMessage.status == OutboxMessageStatusEnum.PENDING)
             .order_by(OutboxMessage.created_at)
-            .limit(limit)
+            .limit(limit).with_for_update()
         )
         result = await session.scalars(stmt)
         return list(result)
