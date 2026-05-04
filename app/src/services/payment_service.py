@@ -2,12 +2,12 @@ from __future__ import annotations
 from decimal import Decimal
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
+from src.services.commands import PaymentCreateCommand
 from src.services.payment_status_service import PaymentStatusService
 from src.repositories.outbox_repository import OutboxMessageRepository
 from src.core.exceptions import IdempotencyConflictError
 from src.models.payment import Payment
 from src.repositories.payment_repository import PaymentRepository
-from src.web.schemas.payment import PaymentCreateRequest
 
 
 class PaymentService(PaymentStatusService):
@@ -22,19 +22,19 @@ class PaymentService(PaymentStatusService):
         self.outbox_aggregate_type = 'payment'
         self.outbox_event_payment_created = 'payment.created'
 
-    async def create_payment(self, idempotency_key: str, schema: PaymentCreateRequest) -> Payment:
-        existing_payment = await self._ensure_idempotent_request(idempotency_key, schema)
+    async def create_payment(self, idempotency_key: str, command: PaymentCreateCommand) -> Payment:
+        existing_payment = await self._ensure_idempotent_request(idempotency_key, command)
         if existing_payment:
             return existing_payment
 
         payment = await self._payment_repository.create(
             session=self._session,
             idempotency_key=idempotency_key,
-            amount=schema.amount,
-            currency=schema.currency,
-            description=schema.description,
-            meta=schema.meta,
-            webhook_url=str(schema.webhook_url),
+            amount=command.amount,
+            currency=command.currency,
+            description=command.description,
+            meta=command.meta,
+            webhook_url=str(command.webhook_url),
         )
         try:
             await self._outbox_repository.create(
@@ -47,7 +47,7 @@ class PaymentService(PaymentStatusService):
             return payment
         except IntegrityError:
             await self._session.rollback()
-            existing_payment = await self._ensure_idempotent_request(idempotency_key, schema)
+            existing_payment = await self._ensure_idempotent_request(idempotency_key, command)
             if existing_payment:
                 return existing_payment
             raise
@@ -55,21 +55,21 @@ class PaymentService(PaymentStatusService):
     async def _ensure_idempotent_request(
             self,
             idempotency_key: str,
-            schema: PaymentCreateRequest,
+            command: PaymentCreateCommand,
     ) -> Payment | None:
         payment = await self._payment_repository.get_by_idempotency_key(self._session, idempotency_key)
-        if payment and not self._payment_matches_request(payment, schema):
+        if payment and not self._payment_matches_request(payment, command):
             raise IdempotencyConflictError(
                 "Idempotency-Key is already used for another payment payload"
             )
         return payment
 
     @staticmethod
-    def _payment_matches_request(payment: Payment, schema: PaymentCreateRequest) -> bool:
+    def _payment_matches_request(payment: Payment, command: PaymentCreateCommand) -> bool:
         return (
-            Decimal(payment.amount) == schema.amount
-            and payment.currency == schema.currency
-            and payment.description == schema.description
-            and payment.meta == schema.meta
-            and payment.webhook_url == str(schema.webhook_url)
+            Decimal(payment.amount) == command.amount
+            and payment.currency == command.currency
+            and payment.description == command.description
+            and payment.meta == command.meta
+            and payment.webhook_url == str(command.webhook_url)
         )
