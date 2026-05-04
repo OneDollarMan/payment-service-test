@@ -28,7 +28,7 @@ class PaymentConsumerService(PaymentStatusService):
             return
 
         try:
-            await self.process_payment()
+            await self._process_payment()
         except PaymentProcessingError as e:
             self._logger.error(str(e))
             payment = await self.set_payment_status(payment, PaymentStatusEnum.FAILED)
@@ -58,7 +58,7 @@ class PaymentConsumerService(PaymentStatusService):
             response = await client.post(payment.webhook_url, json=payload)
             response.raise_for_status()
 
-    async def process_payment(self) -> None:
+    async def _process_payment(self) -> None:
         await asyncio.sleep(random.randint(2, 5))
         if random.randint(0, 9) == 0:
             raise PaymentProcessingError("Payment failed")
