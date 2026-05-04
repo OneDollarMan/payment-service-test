@@ -2,8 +2,7 @@ import asyncio
 import random
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
-
-from core.exceptions import PaymentNotFoundError
+from src.core.exceptions import PaymentNotFoundError
 from src.repositories.payment_repository import PaymentRepository
 from src.services.payment_status_service import PaymentStatusService
 from src.core.config import PaymentStatusEnum

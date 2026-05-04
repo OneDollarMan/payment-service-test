@@ -1,6 +1,6 @@
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from sqlalchemy import Enum
+from enum import Enum
 
 
 class Settings(BaseSettings):
