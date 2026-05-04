@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 
 
-@dataclass
+@dataclass(frozen=True)
 class PaymentCreateCommand:
     amount: Decimal
     currency: str
