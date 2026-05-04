@@ -27,13 +27,15 @@ class PaymentConsumerService(PaymentStatusService):
             self._logger.warning(str(e))
             return
 
-        try:
-            await self._process_payment()
-        except PaymentProcessingError as e:
-            self._logger.error(str(e))
-            payment = await self.set_payment_status(payment, PaymentStatusEnum.FAILED)
-            await self._notify_payment_processed(payment)
-            return
+        if payment.status == PaymentStatusEnum.PENDING:
+            self._logger.info(f"Processing payment {payment_id}...")
+            try:
+                await self._process_payment()
+            except PaymentProcessingError as e:
+                self._logger.error(str(e))
+                payment = await self.set_payment_status(payment, PaymentStatusEnum.FAILED)
+                await self._notify_payment_processed(payment)
+                return
 
         payment = await self.set_payment_status(payment, PaymentStatusEnum.SUCCEEDED)
         await self._notify_payment_processed(payment)
