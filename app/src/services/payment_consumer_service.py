@@ -2,7 +2,7 @@ import asyncio
 import random
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
-from src.core.exceptions import PaymentNotFoundError
+from src.core.exceptions import PaymentNotFoundError, PaymentProcessingError
 from src.repositories.payment_repository import PaymentRepository
 from src.services.payment_status_service import PaymentStatusService
 from src.core.config import PaymentStatusEnum
@@ -29,15 +29,14 @@ class PaymentConsumerService(PaymentStatusService):
 
         try:
             await self.process_payment()
-            await self._notify_payment_processed(payment)
-        except Exception as e:
+        except PaymentProcessingError as e:
             self._logger.error(str(e))
-            payment.status = PaymentStatusEnum.FAILED
-            await self._session.commit()
+            payment = await self.set_payment_status(payment, PaymentStatusEnum.FAILED)
+            await self._notify_payment_processed(payment)
             return
 
-        payment.status = PaymentStatusEnum.SUCCEEDED
-        await self._session.commit()
+        payment = await self.set_payment_status(payment, PaymentStatusEnum.SUCCEEDED)
+        await self._notify_payment_processed(payment)
         self._logger.info(
             "Processed payment id=%s status=%s webhook_url=%s",
             payment.id,
@@ -62,4 +61,4 @@ class PaymentConsumerService(PaymentStatusService):
     async def process_payment(self) -> None:
         await asyncio.sleep(random.randint(2, 5))
         if random.randint(0, 9) == 0:
-            raise Exception("Payment failed")
+            raise PaymentProcessingError("Payment failed")

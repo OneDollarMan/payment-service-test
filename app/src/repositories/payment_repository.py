@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 from decimal import Decimal
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from src.core.config import PaymentStatusEnum
 from src.models.payment import Payment
 
 
@@ -38,11 +39,12 @@ class PaymentRepository:
         stmt = select(Payment).where(Payment.idempotency_key == idempotency_key)
         return await session.scalar(stmt)
 
-    async def update_status(self, session: AsyncSession, payment_id: uuid.UUID, status: str) -> Payment | None:
-        payment = await self.get_by_id(session, payment_id)
-        if not payment:
-            return None
-
+    async def update_loaded_status(
+            self,
+            session: AsyncSession,
+            payment: Payment,
+            status: PaymentStatusEnum,
+    ) -> Payment:
         payment.status = status
         payment.processed_at = datetime.now(timezone.utc)
         await session.flush()

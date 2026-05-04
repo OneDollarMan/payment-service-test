@@ -22,9 +22,11 @@ class PaymentStatusService:
             raise PaymentNotFoundError(f'Payment {payment_id} not found')
         return payment
 
-    async def update_payment_status(self, payment_id: uuid.UUID, status: PaymentStatusEnum) -> Payment:
-        payment = await self._payment_repository.update_status(self._session, payment_id, status)
-        if not payment:
-            raise PaymentNotFoundError(f'Payment {payment_id} not found')
+    async def set_payment_status(
+            self,
+            payment: Payment,
+            status: PaymentStatusEnum,
+    ) -> Payment:
+        payment = await self._payment_repository.update_loaded_status(self._session, payment, status)
         await self._session.commit()
         return payment
