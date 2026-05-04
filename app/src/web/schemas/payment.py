@@ -3,6 +3,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Literal, Annotated
 from pydantic import BaseModel, StringConstraints, HttpUrl, Field
+from src.core.config import PaymentStatusEnum
 
 
 class PaymentCreateRequest(BaseModel):
@@ -14,8 +15,8 @@ class PaymentCreateRequest(BaseModel):
 
 
 class PaymentCreateResponse(BaseModel):
-    id: uuid.UUID
-    status: str
+    id: uuid.UUID = Field(serialization_alias='payment_id')
+    status: PaymentStatusEnum
     created_at: datetime
 
 
