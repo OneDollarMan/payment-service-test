@@ -2,6 +2,7 @@ from __future__ import annotations
 from decimal import Decimal
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
+from src.core.types import AggType, EventNameType
 from src.services.commands import PaymentCreateCommand
 from src.services.payment_status_service import PaymentStatusService
 from src.repositories.outbox_repository import OutboxMessageRepository
@@ -19,8 +20,8 @@ class PaymentService(PaymentStatusService):
     ):
         super().__init__(session, payment_repository)
         self._outbox_repository = outbox_repository
-        self.outbox_aggregate_type = 'payment'
-        self.outbox_event_payment_created = 'payment.created'
+        self.outbox_aggregate_type: AggType = 'payment'
+        self.outbox_event_payment_created: EventNameType = 'payment.created'
 
     async def create_payment(self, idempotency_key: str, command: PaymentCreateCommand) -> Payment:
         existing_payment = await self._ensure_idempotent_request(idempotency_key, command)
