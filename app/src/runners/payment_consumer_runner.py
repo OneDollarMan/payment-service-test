@@ -4,10 +4,11 @@ from src.repositories.payment_repository import PaymentRepository
 from src.broker import build_broker, build_exchange, build_queue, PaymentCreatedEvent
 from src.core.db import async_session_maker
 from src.services.payment_consumer_service import PaymentConsumerService
+from src.services.payment_webhook_notifier import PaymentWebhookNotifier
 
 
 def build_payment_consumer_service(session: AsyncSession) -> PaymentConsumerService:
-    return PaymentConsumerService(session, PaymentRepository())
+    return PaymentConsumerService(session, PaymentRepository(), PaymentWebhookNotifier())
 
 
 def build_runner():
