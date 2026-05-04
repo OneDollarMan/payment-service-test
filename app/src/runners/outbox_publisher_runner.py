@@ -1,5 +1,6 @@
 import asyncio
 from faststream import FastStream
+from src.core.config import settings
 from src.broker import PaymentEventProducer, build_broker, build_exchange
 from src.core.db import async_session_maker
 from src.core.logger import build_logger
@@ -24,6 +25,7 @@ def build_runner():
                         session=session,
                         outbox_repository=outbox_repository,
                         payment_event_producer=payment_event_producer,
+                        outbox_publish_max_attempts=settings.outbox_publish_max_attempts
                     )
                     await service.publish_pending_messages()
             except Exception:
