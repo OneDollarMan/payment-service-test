@@ -1,7 +1,7 @@
-from src.core.logger import build_logger
-from src.broker import PaymentEventProducer, PaymentCreatedEvent
-from src.repositories.outbox_repository import OutboxMessageRepository
 from sqlalchemy.ext.asyncio import AsyncSession
+from src.broker import PaymentEventProducer, PaymentCreatedEvent
+from src.core.logger import build_logger
+from src.repositories.outbox_repository import OutboxMessageRepository
 
 
 class OutboxPublisherService:
@@ -15,7 +15,7 @@ class OutboxPublisherService:
         self._session = session
         self._outbox_repository = outbox_repository
         self._payment_event_producer = payment_event_producer
-        self.outbox_publish_max_attempts = outbox_publish_max_attempts
+        self._outbox_publish_max_attempts = outbox_publish_max_attempts
         self._logger = build_logger(self.__class__.__name__)
 
     async def publish_pending_messages(self, limit: int = 100) -> int:
@@ -45,7 +45,7 @@ class OutboxPublisherService:
                 self._logger.error(f'Error publishing {outbox_message.id=}: {repr(exc)}')
                 await self._session.rollback()
                 await self._session.refresh(outbox_message)
-                await self._outbox_repository.mark_as_failed(self._session, outbox_message, str(exc), self.outbox_publish_max_attempts)
+                await self._outbox_repository.mark_as_failed(self._session, outbox_message, str(exc), self._outbox_publish_max_attempts)
                 await self._session.commit()
 
         return published_count
