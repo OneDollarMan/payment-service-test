@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     postgres_host: str = Field(default='payment-service-db', validation_alias="POSTGRES_HOST")
     postgres_port: int = Field(default='5432', validation_alias="PGPORT")
     postgres_db: str = Field(default='payment-service', validation_alias="POSTGRES_DB")
-    broker_url: str = Field(default='amqp://rabbit:rabbit@payment-service-rabbitmq:5672/', validation_alias="BROKER_URL")
+    broker_url: str = Field(default='amqp://rabbit:rabbit@payment-service-rabbitmq:5672/', validation_alias="CELERY_BROKER_URL")
     auth_api_key: str = Field(default='key', validation_alias="AUTH_API_KEY")
 
     outbox_publish_max_attempts: int = Field(default=5, validation_alias="OUTBOX_PUBLISH_MAX_ATTEMPTS")

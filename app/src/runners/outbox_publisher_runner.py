@@ -28,8 +28,8 @@ def build_runner():
                         outbox_publish_max_attempts=settings.outbox_publish_max_attempts
                     )
                     await service.publish_pending_messages()
-            except Exception:
-                logger.exception("Outbox publisher loop iteration failed")
+            except Exception as e:
+                logger.exception(f"Outbox publisher loop iteration failed: {repr(e)}")
             finally:
                 await asyncio.sleep(poll_interval_seconds)
     return app
